@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Blog Content Styles */
+.blog-content h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #dc2626;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  font-family: serif;
+}
+
+.blog-content h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-family: serif;
+}
+
+.blog-content p {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #d4d4d8;
+  margin-bottom: 1.5rem;
+}
+
+.blog-content ul,
+.blog-content ol {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.blog-content ul {
+  list-style-type: disc;
+}
+
+.blog-content ol {
+  list-style-type: decimal;
+}
+
+.blog-content li {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #d4d4d8;
+  margin-bottom: 0.5rem;
+}
+
+.blog-content strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #dc2626;
+  padding-left: 1.5rem;
+  font-style: italic;
+  color: #a1a1aa;
+  margin: 2rem 0;
+  font-size: 1.25rem;
+}
+
+.blog-content img {
+  border-radius: 1rem;
+  margin: 3rem 0;
+  width: 100%;
+  border: 1px solid rgba(63, 63, 70, 0.5);
+}
+
+.blog-content pre {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.blog-content code {
+  color: #ef4444;
+  background-color: #18181b;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: monospace;
+}
+
+.blog-content pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #d4d4d8;
+  font-size: 0.875rem;
+}
+
+.blog-content a {
+  color: #dc2626;
+  text-decoration: none;
+}
+
+.blog-content a:hover {
+  color: #ef4444;
+}
