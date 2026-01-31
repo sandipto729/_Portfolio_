@@ -84,7 +84,8 @@ async def create_blog_embedding(blog_post: BlogPost):
         )
         
         # Store in Qdrant
-        url = "http://localhost:6333"
+        import os
+        url = os.getenv("QDRANT_URL")
         qdrant = QdrantVectorStore.from_documents(
             chunks,
             embedding,

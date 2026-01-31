@@ -28,7 +28,8 @@ async def fetch_similar_blogs(request: BlogIdRequest) -> List[SimilarBlog]:
     """
     try:
         # Initialize Qdrant client and embeddings
-        url = "http://localhost:6333"
+        import os
+        url = os.getenv("QDRANT_URL")
         client = QdrantClient(url=url)
         
         embedding = OpenAIEmbeddings(

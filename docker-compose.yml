@@ -1,0 +1,68 @@
+services:
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: portfolio-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - internal
+
+  # AI Backend (Flask/FastAPI) - Internal only
+  ai_backend:
+    image: portfolio-ai-backend:latest
+    build:
+      context: ./ai_backend
+      dockerfile: Dockerfile
+    container_name: portfolio-ai-backend
+    restart: unless-stopped
+    env_file:
+      - ./ai_backend/.env.docker
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - qdrant
+    networks:
+      - internal
+    # No ports exposed - internal network only
+
+  # Next.js Frontend - Public facing
+  frontend:
+    image: portfolio-frontend:latest
+    build:
+      context: ./portfolio
+      dockerfile: Dockerfile
+      args:
+        - MONGODB_URI=${MONGODB_URI:-}
+        - AI_BACKEND_URL=http://ai_backend:8000
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key}
+        - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+    container_name: portfolio-frontend
+    restart: unless-stopped
+    env_file:
+      - ./portfolio/.env.docker
+    environment:
+      - AI_BACKEND_URL=http://ai_backend:8000
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ai_backend
+    networks:
+      - internal
+      - external
+
+networks:
+  internal:
+    driver: bridge
+  external:
+    driver: bridge
+
+volumes:
+  qdrant_storage:
+    driver: local

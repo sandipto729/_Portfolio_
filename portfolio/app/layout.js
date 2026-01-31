@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import SessionWrapper from "@/components/SessionWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,10 +24,11 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-[#050505] text-white selection:bg-red-600 selection:text-white`}
       >
-        <Navigation />
-        <main className="flex-grow pt-20">
-          {children}
-        </main>
+        <SessionWrapper>
+          <Navigation />
+          <main className="flex-grow pt-20">
+            {children}
+          </main>
         <footer className="relative py-20 px-6 bg-gradient-to-b from-[#080808] to-black overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent"></div>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/5 via-transparent to-transparent"></div>
@@ -51,11 +53,12 @@ export default function RootLayout({ children }) {
               <div className="flex gap-8">
                 <a href="#" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">LinkedIn</a>
                 <a href="#" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Github</a>
-                <a href="#" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Codeforces</a>
+                <a href="/login" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Admin</a>
               </div>
             </div>
           </div>
         </footer>
+        </SessionWrapper>
       </body>
     </html>
   );
