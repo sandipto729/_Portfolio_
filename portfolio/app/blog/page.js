@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { BLOG_POSTS } from '@/components/constant';
 
 const Blog = () => {
-  console.log(BLOG_POSTS);
+  // console.log(BLOG_POSTS);
   return (
     <div className="py-12 px-6">
       <div className="max-w-6xl mx-auto">
