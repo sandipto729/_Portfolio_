@@ -1,8 +1,39 @@
 
-import React from 'react';
-import { PROJECTS } from '@/components/constant';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 
 const Projects = () => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/project');
+      const data = await response.json();
+      
+      if (data.success) {
+        setProjects(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-xl">Loading projects...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="py-12 px-6">
       <div className="max-w-7xl mx-auto">
@@ -14,9 +45,9 @@ const Projects = () => {
         </header>
 
         <div className="space-y-16">
-          {PROJECTS.map((project) => (
+          {projects.map((project, index) => (
             <div 
-              key={project.id} 
+              key={project._id} 
               className="group relative glass border border-zinc-800/50 rounded-3xl overflow-hidden hover:border-red-600/40 transition-all duration-500 shadow-2xl hover:shadow-red-900/20"
             >
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
@@ -32,7 +63,7 @@ const Projects = () => {
                           {project.title}
                         </h3>
                       </div>
-                      <div className="text-zinc-800 text-4xl font-serif font-bold">0{project.id}</div>
+                      <div className="text-zinc-800 text-4xl font-serif font-bold">0{index + 1}</div>
                     </div>
                     
                     <p className="text-zinc-400 text-base leading-relaxed mb-8">

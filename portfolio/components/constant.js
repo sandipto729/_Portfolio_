@@ -29,32 +29,52 @@ export const PAGE_DESCRIPTIONS = [
 export const PROJECTS = [
   {
     id: "1",
-    title: "Distributed Task Scheduler",
-    category: "Backend / Node.js",
-    description: "A high-concurrency task scheduling system leveraging Redis for low-latency job queues. Supports priority-based execution and real-time monitoring.",
-    imageUrl: "https://www.csm.tech/storage/uploads/news/665d96c93496f1717409481Thumb.jpg",
-    techStack: ["Node.js", "Redis", "Docker", "WebSocket"],
-    github: "https://github.com/sandiptoroy/task-scheduler",
-    demo: "https://task-scheduler-demo.vercel.app"
+    title: "School Management System",
+    category: "Full-Stack / Production",
+    description: "A comprehensive school management platform serving 2000+ users with OTP verification (Redis), real-time alumni chat (Socket.IO), and an AI chatbot using LangChain + RAG for query assistance. Features include profiles, results, admissions, notice board, and blog editor with auto result generation.",
+    imageUrl: "https://www.srsnrng.in/assets/Logo-Dd-BOIQa.png",
+    techStack: ["React.js", "Node.js", "Express.js", "MongoDB", "Redis", "Socket.IO", "Cloudinary", "LangChain"],
+    github: "https://github.com/sandipto729/SRSN",
+    demo: "https://srsn.vercel.app"
   },
   {
     id: "2",
-    title: "Algorithm Visualizer",
-    category: "React / Algorithms",
-    description: "Interactive platform to visualize complex graph and sorting algorithms. Real-time animation with step-by-step breakdown and complexity analysis.",
-    imageUrl: "https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=800&auto=format&fit=crop",
-    techStack: ["React", "TypeScript", "TailwindCSS", "D3.js"],
-    github: "https://github.com/sandiptoroy/algo-visualizer",
-    demo: "https://algo-viz.vercel.app"
+    title: "AI-Powered Blogging Platform",
+    category: "Full-Stack / AI/ML",
+    description: "Advanced blogging platform with AI-based post recommendations using GraphSAGE + HNSW (Neo4j). Features real-time comments via Socket.IO, NextAuth authentication (Google, GitHub), Azure Blob Storage for images, and intelligent tagging system with comprehensive search capabilities.",
+    imageUrl: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800&auto=format&fit=crop",
+    techStack: ["Next.js", "Node.js", "GraphQL", "Neo4j", "MongoDB", "Socket.IO", "Azure Blob Storage"],
+    github: "https://github.com/sandipto729/blog-platform",
+    demo: "https://blog-platform-demo.vercel.app"
   },
   {
     id: "3",
-    title: "High-Freq Engine",
-    category: "C++ / Systems",
-    description: "Exploration of low-latency communication patterns for financial order matching engines. Implements lock-free data structures and memory pools.",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
-    techStack: ["C++20", "Boost", "gRPC", "CMake"],
-    github: "https://github.com/sandiptoroy/hft-engine",
+    title: "E-Commerce Platform",
+    category: "MERN Stack / Web",
+    description: "Full-featured e-commerce solution where owners can manage products and inventory while users browse, purchase, and checkout securely. Built with modern MERN stack architecture for scalability and performance.",
+    imageUrl: "https://images.unsplash.com/photo-1557821552-17105176677c?q=80&w=800&auto=format&fit=crop",
+    techStack: ["MongoDB", "Express.js", "React.js", "Node.js"],
+    github: "https://github.com/sandipto729/ecommerce",
+    demo: null
+  },
+  {
+    id: "4",
+    title: "Centrality Detection using Deep Learning",
+    category: "AI/ML / Graph Neural Networks",
+    description: "Advanced social network analysis using GCN-based node centrality ranking. Implements Degree, PageRank, and STC algorithms with temporal graph convolutional networks (TGCN) for dynamic network analysis.",
+    imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop",
+    techStack: ["Python", "GCN", "TGCN", "Deep Learning", "NetworkX"],
+    github: "https://github.com/sandipto729/centrality-detection",
+    demo: null
+  },
+  {
+    id: "5",
+    title: "Hospital Management System",
+    category: "MERN Stack / Healthcare",
+    description: "Comprehensive healthcare management solution featuring appointment booking, integrated Razorpay/Stripe payment processing, and video consultation via Jitsi. Streamlines patient-doctor interactions and medical record management.",
+    imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop",
+    techStack: ["MongoDB", "Express.js", "React.js", "Node.js", "Razorpay", "Stripe", "Jitsi"],
+    github: "https://github.com/sandipto729/hospital-management",
     demo: null
   }
 ];
@@ -88,14 +108,14 @@ export const MEDIA_SECTIONS = [
 
 
 // export const BLOG_POSTS = [
-//   {
-//     id: "1",
-//     title: "Cracking the Goldman Sachs Internship",
-//     excerpt: "My step-by-step experience navigating the Engineering Campus Hiring Program.",
-//     date: "April 20, 2024",
-//     readTime: "7 min read",
-//     imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop",
-//     tags: ["Career", "Interview", "Goldman Sachs"],
+  // {
+  //   id: "1",
+  //   title: "Cracking the Goldman Sachs Internship",
+  //   excerpt: "My step-by-step experience navigating the Engineering Campus Hiring Program.",
+  //   date: "April 20, 2024",
+  //   readTime: "7 min read",
+  //   imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop",
+  //   tags: ["Career", "Interview", "Goldman Sachs"],
 //     content: `<p>Landing an internship at Goldman Sachs was one of the most challenging yet rewarding experiences of my academic journey. Here's how I navigated through the rigorous Engineering Campus Hiring Program.</p>
 
 // <h2>The Application Process</h2>
