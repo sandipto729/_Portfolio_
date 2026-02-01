@@ -52,7 +52,7 @@ export default function RootLayout({ children }) {
               
               <div className="flex gap-8">
                 <a href="https://www.linkedin.com/in/sandipto-roy-675600277/" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">LinkedIn</a>
-                <a href="#" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Github</a>
+                <a href="https://github.com/sandipto729" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Github</a>
                 <a href="/login" className="text-zinc-500 hover:text-red-600 transition-all text-sm font-bold uppercase tracking-widest hover:translate-y-[-2px]">Admin</a>
               </div>
             </div>
