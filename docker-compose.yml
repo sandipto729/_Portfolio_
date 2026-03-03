@@ -37,6 +37,11 @@ services:
   web_1:
     build:
       context: ./portfolio
+      args:
+        MONGODB_URI: mongodb://portfolio_user:portfolio_pass@mongodb:27017/portfolio?authSource=admin
+        AI_BACKEND_URL: http://ai_backend:8000
+        NEXTAUTH_SECRET: your-secret-key-change-this-in-production
+        NEXTAUTH_URL: http://43.204.214.45
     image: portfolio-frontend:latest
     container_name: portfolio-web-1
     restart: unless-stopped
