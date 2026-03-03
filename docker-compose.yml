@@ -37,6 +37,7 @@ services:
   web_1:
     build:
       context: ./portfolio
+    image: portfolio-frontend:latest
     container_name: portfolio-web-1
     restart: unless-stopped
     env_file:
