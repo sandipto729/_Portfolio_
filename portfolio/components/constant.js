@@ -2,7 +2,7 @@
 export const PAGE_DESCRIPTIONS = [
   {
     title: "Projects",
-    path: "/projects",
+    path: "/project",
     description: "Algorithmic solutions and technical experiments developed during my journey at NIT Durgapur.",
     icon: "💻"
   },
