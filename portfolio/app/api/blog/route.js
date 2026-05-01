@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import dbConnect from '@/lib/mongodb';
 import Blog from '@/models/Blog';
+import Newsletter from '@/models/Newsletter';
+import { sendNewBlogEmail } from '@/lib/mailer';
 import { authOptions } from '../auth/[...nextauth]/route';
 
 async function syncBlogEmbedding(blog) {
@@ -92,6 +94,20 @@ export async function POST(request) {
     } catch (aiError) {
       console.error('AI backend error:', aiError.message);
       // Continue even if AI embedding fails
+    }
+
+    // Notify newsletter subscribers about the new blog post
+    try {
+      const subscribers = await Newsletter.find({}).select('email').lean();
+      const emails = subscribers.map((subscriber) => subscriber.email).filter(Boolean);
+
+      await sendNewBlogEmail(emails, {
+        id: blog.id || blog._id.toString(),
+        title: blog.title,
+        excerpt: blog.excerpt,
+      });
+    } catch (mailError) {
+      console.error('Newsletter email error:', mailError.message);
     }
     
     return NextResponse.json({

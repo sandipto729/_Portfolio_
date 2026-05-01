@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Newsletter from '@/models/Newsletter';
+import { sendWelcomeEmail } from '@/lib/mailer';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,13 +22,22 @@ export async function POST(request) {
     const existing = await Newsletter.findOne({ email });
 
     if (existing) {
-      return NextResponse.json({
-        success: true,
-        message: 'You are already subscribed to the newsletter',
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email already registered',
+        },
+        { status: 409 }
+      );
     }
 
     await Newsletter.create({ email });
+
+    try {
+      await sendWelcomeEmail(email);
+    } catch (mailError) {
+      console.error('Welcome email failed:', mailError.message);
+    }
 
     return NextResponse.json(
       {
