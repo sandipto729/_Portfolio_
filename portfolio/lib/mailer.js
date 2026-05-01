@@ -61,7 +61,8 @@ export async function sendNewBlogEmail(emails, blog) {
     return { skipped: true };
   }
 
-  const blogUrl = blog?.url || `${process.env.NEXTAUTH_URL || ''}/blog/${blog?.id || ''}`;
+  const siteUrl = process.env.SITE_URL || 'https://sandipto.in';
+  const blogUrl = blog?.url || `${siteUrl.replace(/\/$/, '')}/blog/${blog?.id || ''}`;
 
   await Promise.allSettled(
     emails.map((email) =>
