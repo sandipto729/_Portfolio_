@@ -7,8 +7,35 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain.schema import Document
+from qdrant_client import QdrantClient
+from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 router = APIRouter()
+
+
+def get_qdrant_client() -> QdrantClient:
+    import os
+
+    url = os.getenv("QDRANT_URL")
+    if not url:
+        raise HTTPException(status_code=500, detail="QDRANT_URL is not configured")
+
+    return QdrantClient(url=url)
+
+
+def delete_blog_points(blog_id: str):
+    client = get_qdrant_client()
+    client.delete(
+        collection_name="jojo_portfolio",
+        points_selector=Filter(
+            must=[
+                FieldCondition(
+                    key="metadata.id",
+                    match=MatchValue(value=blog_id),
+                )
+            ]
+        ),
+    )
 
 
 # Request model for blog post
@@ -52,6 +79,9 @@ async def create_blog_embedding(blog_post: BlogPost):
     Create embeddings for a blog post and store in Qdrant
     """
     try:
+        # Remove any existing vectors for this blog so updates stay in sync
+        delete_blog_points(blog_post.id)
+
         # Extract text from HTML content
         clean_text = extract_text_from_html(blog_post.content)
         
@@ -100,5 +130,21 @@ async def create_blog_embedding(blog_post: BlogPost):
             "blog_id": blog_post.id
         }
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/embedding/{blog_id}")
+async def delete_blog_embedding(blog_id: str):
+    """Delete all vector chunks associated with a blog post."""
+    try:
+        delete_blog_points(blog_id)
+
+        return {
+            "status": "success",
+            "message": f"Blog post '{blog_id}' deleted from embeddings successfully",
+            "blog_id": blog_id,
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

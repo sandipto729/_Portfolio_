@@ -55,6 +55,57 @@ export async function POST(request) {
   }
 }
 
+// PUT: Update a project (admin only)
+export async function PUT(request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await dbConnect();
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const projectData = await request.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Project ID required' },
+        { status: 400 }
+      );
+    }
+
+    const updatedProject = await Project.findByIdAndUpdate(
+      id,
+      projectData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProject) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updatedProject,
+      message: 'Project updated successfully',
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE: Delete a project (admin only)
 export async function DELETE(request) {
   try {
