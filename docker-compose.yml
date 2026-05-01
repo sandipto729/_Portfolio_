@@ -23,6 +23,7 @@ services:
   ai_backend:
     build:
       context: ./ai_backend
+    image: portfolio-ai-backend:latest
     container_name: portfolio-ai-backend
     restart: unless-stopped
     env_file:
