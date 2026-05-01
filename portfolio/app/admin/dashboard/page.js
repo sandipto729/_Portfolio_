@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [blogFormData, setBlogFormData] = useState(createBlogFormState());
   const [projectFormData, setProjectFormData] = useState(createProjectFormState());
+  const [subscribers, setSubscribers] = useState([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchBlogs();
     fetchProjects();
+    fetchSubscribers();
   }, []);
 
   const fetchBlogs = async () => {
@@ -77,6 +79,18 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
+    }
+  };
+
+  const fetchSubscribers = async () => {
+    try {
+      const response = await fetch('/api/newsletter');
+      const data = await response.json();
+      if (data.success) {
+        setSubscribers(data.subscribers);
+      }
+    } catch (error) {
+      console.error('Error fetching subscribers:', error);
     }
   };
 
@@ -301,6 +315,20 @@ export default function AdminDashboard() {
             }`}
           >
             Projects ({projects.length})
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('newsletter');
+              setShowBlogForm(false);
+              setShowProjectForm(false);
+            }}
+            className={`px-6 py-3 font-bold transition-all ${
+              activeTab === 'newsletter'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-zinc-500 hover:text-white'
+            }`}
+          >
+            Newsletter ({subscribers.length})
           </button>
         </div>
 
@@ -660,6 +688,62 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Newsletter Section */}
+        {activeTab === 'newsletter' && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-2xl font-serif font-bold mb-6">Newsletter Subscribers</h2>
+              {subscribers.length === 0 ? (
+                <div className="text-center py-12 bg-zinc-900 rounded-lg">
+                  <p className="text-zinc-500">No subscribers yet</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="px-6 py-3 text-zinc-400 font-semibold">Email</th>
+                        <th className="px-6 py-3 text-zinc-400 font-semibold">Subscribed Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscribers.map((subscriber) => (
+                        <tr
+                          key={subscriber._id}
+                          className="border-b border-zinc-800 hover:bg-zinc-900 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <a
+                              href={`mailto:${subscriber.email}`}
+                              className="text-blue-400 hover:underline break-all"
+                            >
+                              {subscriber.email}
+                            </a>
+                          </td>
+                          <td className="px-6 py-4 text-zinc-500 text-sm">
+                            {new Date(subscriber.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="mt-6 p-4 bg-zinc-900 rounded-lg">
+                <p className="text-zinc-400 text-sm">
+                  Total Subscribers: <span className="font-bold text-white">{subscribers.length}</span>
+                </p>
               </div>
             </div>
           </>
