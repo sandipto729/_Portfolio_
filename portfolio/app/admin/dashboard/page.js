@@ -4,6 +4,33 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const getCurrentDate = () =>
+  new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+const createBlogFormState = () => ({
+  title: '',
+  excerpt: '',
+  date: getCurrentDate(),
+  readTime: '',
+  imageUrl: '',
+  tags: '',
+  content: '',
+});
+
+const createProjectFormState = () => ({
+  title: '',
+  category: '',
+  description: '',
+  imageUrl: '',
+  techStack: '',
+  github: '',
+  demo: '',
+});
+
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -12,25 +39,11 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState([]);
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const [editingBlogId, setEditingBlogId] = useState(null);
+  const [editingProjectId, setEditingProjectId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [blogFormData, setBlogFormData] = useState({
-    title: '',
-    excerpt: '',
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    readTime: '',
-    imageUrl: '',
-    tags: '',
-    content: '',
-  });
-  const [projectFormData, setProjectFormData] = useState({
-    title: '',
-    category: '',
-    description: '',
-    imageUrl: '',
-    techStack: '',
-    github: '',
-    demo: '',
-  });
+  const [blogFormData, setBlogFormData] = useState(createBlogFormState());
+  const [projectFormData, setProjectFormData] = useState(createProjectFormState());
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -67,6 +80,90 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditBlog = (blog) => {
+    setActiveTab('blogs');
+    setEditingBlogId(blog._id);
+    setShowBlogForm(true);
+    setShowProjectForm(false);
+    setBlogFormData({
+      title: blog.title || '',
+      excerpt: blog.excerpt || '',
+      date: blog.date || getCurrentDate(),
+      readTime: blog.readTime || '',
+      imageUrl: blog.imageUrl || '',
+      tags: Array.isArray(blog.tags) ? blog.tags.join(', ') : '',
+      content: blog.content || '',
+    });
+  };
+
+  const handleEditProject = (project) => {
+    setActiveTab('projects');
+    setEditingProjectId(project._id);
+    setShowProjectForm(true);
+    setShowBlogForm(false);
+    setProjectFormData({
+      title: project.title || '',
+      category: project.category || '',
+      description: project.description || '',
+      imageUrl: project.imageUrl || '',
+      techStack: Array.isArray(project.techStack) ? project.techStack.join(', ') : '',
+      github: project.github || '',
+      demo: project.demo || '',
+    });
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (!confirm('Are you sure you want to delete this blog post?')) return;
+
+    try {
+      const response = await fetch(`/api/blog?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Blog deleted successfully!');
+        if (editingBlogId === id) {
+          setEditingBlogId(null);
+          setShowBlogForm(false);
+          setBlogFormData(createBlogFormState());
+        }
+        fetchBlogs();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (error) {
+      alert('Error deleting blog: ' + error.message);
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+
+    try {
+      const response = await fetch(`/api/project?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Project deleted successfully!');
+        if (editingProjectId === id) {
+          setEditingProjectId(null);
+          setShowProjectForm(false);
+          setProjectFormData(createProjectFormState());
+        }
+        fetchProjects();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (error) {
+      alert('Error deleting project: ' + error.message);
+    }
+  };
+
   const handleBlogSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -74,11 +171,16 @@ export default function AdminDashboard() {
     try {
       const blogData = {
         ...blogFormData,
-        tags: blogFormData.tags.split(',').map(tag => tag.trim()),
+        tags: blogFormData.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
       };
 
-      const response = await fetch('/api/blog', {
-        method: 'POST',
+      const isEditing = Boolean(editingBlogId);
+
+      const response = await fetch(isEditing ? `/api/blog?id=${editingBlogId}` : '/api/blog', {
+        method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -88,17 +190,10 @@ export default function AdminDashboard() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Blog created successfully!');
+        alert(isEditing ? 'Blog updated successfully!' : 'Blog created successfully!');
         setShowBlogForm(false);
-        setBlogFormData({
-          title: '',
-          excerpt: '',
-          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-          readTime: '',
-          imageUrl: '',
-          tags: '',
-          content: '',
-        });
+        setEditingBlogId(null);
+        setBlogFormData(createBlogFormState());
         fetchBlogs();
       } else {
         alert('Error: ' + data.error);
@@ -117,12 +212,17 @@ export default function AdminDashboard() {
     try {
       const projectData = {
         ...projectFormData,
-        techStack: projectFormData.techStack.split(',').map(tech => tech.trim()),
+        techStack: projectFormData.techStack
+          .split(',')
+          .map((tech) => tech.trim())
+          .filter(Boolean),
         demo: projectFormData.demo || null,
       };
 
-      const response = await fetch('/api/project', {
-        method: 'POST',
+      const isEditing = Boolean(editingProjectId);
+
+      const response = await fetch(isEditing ? `/api/project?id=${editingProjectId}` : '/api/project', {
+        method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -132,17 +232,10 @@ export default function AdminDashboard() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Project created successfully!');
+        alert(isEditing ? 'Project updated successfully!' : 'Project created successfully!');
         setShowProjectForm(false);
-        setProjectFormData({
-          title: '',
-          category: '',
-          description: '',
-          imageUrl: '',
-          techStack: '',
-          github: '',
-          demo: '',
-        });
+        setEditingProjectId(null);
+        setProjectFormData(createProjectFormState());
         fetchProjects();
       } else {
         alert('Error: ' + data.error);
@@ -151,27 +244,6 @@ export default function AdminDashboard() {
       alert('Error creating project: ' + error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const deleteProject = async (id) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
-
-    try {
-      const response = await fetch(`/api/project?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert('Project deleted successfully!');
-        fetchProjects();
-      } else {
-        alert('Error: ' + data.error);
-      }
-    } catch (error) {
-      alert('Error deleting project: ' + error.message);
     }
   };
 
@@ -238,7 +310,19 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-serif font-bold">Blog Management</h2>
               <button
-                onClick={() => setShowBlogForm(!showBlogForm)}
+                onClick={() => {
+                  if (showBlogForm) {
+                    setShowBlogForm(false);
+                    setEditingBlogId(null);
+                    setBlogFormData(createBlogFormState());
+                  } else {
+                    setActiveTab('blogs');
+                    setShowBlogForm(true);
+                    setShowProjectForm(false);
+                    setEditingBlogId(null);
+                    setBlogFormData(createBlogFormState());
+                  }
+                }}
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
                 {showBlogForm ? 'Cancel' : 'Add New Blog'}
@@ -247,7 +331,9 @@ export default function AdminDashboard() {
 
             {showBlogForm && (
               <form onSubmit={handleBlogSubmit} className="mb-12 bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-                <h3 className="text-2xl font-serif font-bold mb-6">Create New Blog Post</h3>
+                <h3 className="text-2xl font-serif font-bold mb-6">
+                  {editingBlogId ? 'Update Blog Post' : 'Create New Blog Post'}
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -340,7 +426,13 @@ export default function AdminDashboard() {
                   disabled={loading}
                   className="mt-6 w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Creating Blog...' : 'Create Blog Post'}
+                  {loading
+                    ? editingBlogId
+                      ? 'Updating Blog...'
+                      : 'Creating Blog...'
+                    : editingBlogId
+                      ? 'Update Blog Post'
+                      : 'Create Blog Post'}
                 </button>
               </form>
             )}
@@ -350,7 +442,23 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogs.map((blog) => (
                   <div key={blog._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                    <h4 className="text-lg font-bold mb-2">{blog.title}</h4>
+                    <div className="flex justify-between items-start gap-3 mb-2">
+                      <h4 className="text-lg font-bold flex-1">{blog.title}</h4>
+                      <div className="flex gap-3 text-sm shrink-0">
+                        <button
+                          onClick={() => handleEditBlog(blog)}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBlog(blog._id)}
+                          className="text-red-500 hover:text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                     <p className="text-zinc-400 text-sm mb-4">{blog.excerpt}</p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {blog.tags.map((tag, idx) => (
@@ -375,7 +483,19 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-serif font-bold">Project Management</h2>
               <button
-                onClick={() => setShowProjectForm(!showProjectForm)}
+                onClick={() => {
+                  if (showProjectForm) {
+                    setShowProjectForm(false);
+                    setEditingProjectId(null);
+                    setProjectFormData(createProjectFormState());
+                  } else {
+                    setActiveTab('projects');
+                    setShowProjectForm(true);
+                    setShowBlogForm(false);
+                    setEditingProjectId(null);
+                    setProjectFormData(createProjectFormState());
+                  }
+                }}
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
                 {showProjectForm ? 'Cancel' : 'Add New Project'}
@@ -384,7 +504,9 @@ export default function AdminDashboard() {
 
             {showProjectForm && (
               <form onSubmit={handleProjectSubmit} className="mb-12 bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-                <h3 className="text-2xl font-serif font-bold mb-6">Create New Project</h3>
+                <h3 className="text-2xl font-serif font-bold mb-6">
+                  {editingProjectId ? 'Update Project' : 'Create New Project'}
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
@@ -476,7 +598,13 @@ export default function AdminDashboard() {
                   disabled={loading}
                   className="mt-6 w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Creating Project...' : 'Create Project'}
+                  {loading
+                    ? editingProjectId
+                      ? 'Updating Project...'
+                      : 'Creating Project...'
+                    : editingProjectId
+                      ? 'Update Project'
+                      : 'Create Project'}
                 </button>
               </form>
             )}
@@ -488,12 +616,20 @@ export default function AdminDashboard() {
                   <div key={project._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                     <div className="flex justify-between items-start mb-3">
                       <h4 className="text-lg font-bold flex-1">{project.title}</h4>
-                      <button
-                        onClick={() => deleteProject(project._id)}
-                        className="text-red-500 hover:text-red-400 text-sm"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex gap-3 text-sm shrink-0">
+                        <button
+                          onClick={() => handleEditProject(project)}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProject(project._id)}
+                          className="text-red-500 hover:text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                     <p className="text-zinc-500 text-xs mb-3">{project.category}</p>
                     <p className="text-zinc-400 text-sm mb-4 line-clamp-3">{project.description}</p>
