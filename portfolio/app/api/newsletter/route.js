@@ -2,8 +2,39 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Newsletter from '@/models/Newsletter';
 import { sendWelcomeEmail } from '@/lib/mailer';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await dbConnect();
+    const subscribers = await Newsletter.find({}).sort({ createdAt: -1 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        subscribers,
+        count: subscribers.length,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request) {
   try {
