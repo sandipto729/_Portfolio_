@@ -61,7 +61,7 @@ export async function sendNewBlogEmail(emails, blog) {
     return { skipped: true };
   }
 
-  const siteUrl = process.env.SITE_URL || 'https://sandipto.in';
+  const siteUrl ='https://sandipto.in';
   const blogUrl = blog?.url || `${siteUrl.replace(/\/$/, '')}/blog/${blog?.id || ''}`;
 
   await Promise.allSettled(
