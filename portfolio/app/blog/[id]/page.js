@@ -60,6 +60,46 @@ const BlogPost = ({ params }) => {
     }
   };
 
+  const getShareData = () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareText = post?.excerpt || post?.title || 'Check out this article';
+
+    return { shareUrl, shareText };
+  };
+
+  const handleShare = async (platform) => {
+    if (!post) return;
+
+    const { shareUrl, shareText } = getShareData();
+
+    if (platform === 'native' && navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
+    }
+
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(`${post.title} - ${shareText}`);
+
+    const shareLinks = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    };
+
+    const targetUrl = shareLinks[platform];
+
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -99,7 +139,7 @@ const BlogPost = ({ params }) => {
             <header className="mb-12">
               <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-widest text-red-600 mb-6">
                 <span>{post.date}</span>
-                <span className="w-8 h-[1px] bg-red-900/40"></span>
+                <span className="w-8 h-px bg-red-900/40"></span>
                 <span className="text-zinc-500">{post.readTime}</span>
               </div>
 
@@ -120,7 +160,7 @@ const BlogPost = ({ params }) => {
               </div>
 
               {/* Featured Image */}
-              <div className="aspect-[21/9] rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800/50 mb-12">
+              <div className="aspect-21/9 rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800/50 mb-12">
                 <img 
                   src={post.imageUrl} 
                   alt={post.title}
@@ -234,10 +274,18 @@ const BlogPost = ({ params }) => {
                   Share
                 </h3>
                 <div className="flex gap-3">
-                  <button className="flex-1 py-2 px-3 bg-zinc-900/50 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:border-red-600/40 hover:text-red-500 transition-all">
+                  <button
+                    type="button"
+                    onClick={() => handleShare('twitter')}
+                    className="flex-1 py-2 px-3 bg-zinc-900/50 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:border-red-600/40 hover:text-red-500 transition-all"
+                  >
                     Twitter
                   </button>
-                  <button className="flex-1 py-2 px-3 bg-zinc-900/50 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:border-red-600/40 hover:text-red-500 transition-all">
+                  <button
+                    type="button"
+                    onClick={() => handleShare('linkedin')}
+                    className="flex-1 py-2 px-3 bg-zinc-900/50 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:border-red-600/40 hover:text-red-500 transition-all"
+                  >
                     LinkedIn
                   </button>
                 </div>

@@ -8,6 +8,7 @@ const Blog = () => {
   const [blogs, setBlogs] = useState([]);
   const [popularBlogs, setPopularBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTag, setSelectedTag] = useState('');
 
   useEffect(() => {
     fetchBlogs();
@@ -30,6 +31,12 @@ const Blog = () => {
     }
   };
 
+  const filteredBlogs = selectedTag
+    ? blogs.filter((blog) => Array.isArray(blog.tags) && blog.tags.includes(selectedTag))
+    : blogs;
+
+  const allTags = Array.from(new Set(blogs.flatMap((blog) => blog.tags || []))).slice(0, 12);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -51,7 +58,7 @@ const Blog = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Blog List - Left Side (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
-            {blogs.map((post) => (
+            {filteredBlogs.map((post) => (
                 <Link 
                   key={post.id}
                   href={`/blog/${post.id}`}
@@ -60,7 +67,7 @@ const Blog = () => {
                   <article className="grid grid-cols-1 md:grid-cols-3 gap-6 glass border border-zinc-800/50 rounded-3xl overflow-hidden hover:border-red-600/40 transition-all duration-500 p-6">
                     {/* Image */}
                     <div className="md:col-span-1">
-                      <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-900">
+                      <div className="aspect-4/3 rounded-2xl overflow-hidden bg-zinc-900">
                         <img 
                           src={post.imageUrl} 
                           alt={post.title}
@@ -74,7 +81,7 @@ const Blog = () => {
                       <div>
                         <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-red-600 mb-3">
                           <span>{post.date}</span>
-                          <span className="w-8 h-[1px] bg-red-900/40"></span>
+                          <span className="w-8 h-px bg-red-900/40"></span>
                           <span className="text-zinc-500">{post.readTime}</span>
                         </div>
                         
@@ -147,15 +154,34 @@ const Blog = () => {
                   Popular Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {Array.from(new Set(blogs.flatMap(blog => blog.tags))).slice(0, 12).map((tag) => (
-                    <span 
-                      key={tag}
-                      className="px-3 py-1 bg-zinc-900/50 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:border-red-600/40 hover:text-red-500 transition-all cursor-pointer"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {allTags.map((tag) => {
+                    const isActive = selectedTag === tag;
+
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTag(tag)}
+                        className={`px-3 py-1 border text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-red-600/20 border-red-600/50 text-red-400'
+                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-red-600/40 hover:text-red-500'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
                 </div>
+                {selectedTag && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTag('')}
+                    className="mt-4 text-sm text-zinc-400 hover:text-red-500 transition-colors"
+                  >
+                    Clear filter
+                  </button>
+                )}
               </div>
 
               {/* Stats Card */}
