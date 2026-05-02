@@ -1,15 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const turnstileRef = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
+
+  // Global callback for Turnstile
+  useEffect(() => {
+    window.handleTurnstileToken = (token) => {
+      setTurnstileToken(token);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Load Turnstile script
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setTurnstileReady(true);
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
+
+    if (!turnstileToken) {
+      setIsError(true);
+      setMessage('Please complete the security verification.');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     setIsError(false);
@@ -20,7 +53,7 @@ export default function Footer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
 
       const data = await response.json();
@@ -33,6 +66,11 @@ export default function Footer() {
 
       setMessage(data.message || 'Subscribed successfully');
       setEmail('');
+      setTurnstileToken('');
+      // Reset Turnstile for next submission
+      if (window.turnstile && turnstileRef.current) {
+        window.turnstile.reset(turnstileRef.current);
+      }
     } catch (error) {
       setIsError(true);
       setMessage('Something went wrong. Please try again.');
@@ -61,18 +99,25 @@ export default function Footer() {
             Get updates on new blogs, projects, and engineering notes.
           </p>
 
-          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:outline-none focus:border-red-600"
+              className="px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:outline-none focus:border-red-600"
             />
+            <div
+              ref={turnstileRef}
+              className="cf-turnstile"
+              data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+              data-callback="handleTurnstileToken"
+              data-theme="dark"
+            ></div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
               className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-bold disabled:opacity-60"
             >
               {loading ? 'Subscribing...' : 'Subscribe'}
