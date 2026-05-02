@@ -1,8 +1,9 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const Blog = () => {
   const [blogs, setBlogs] = useState([]);
@@ -13,19 +14,53 @@ const Blog = () => {
   const [limit, setLimit] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const router = useRouter();
+  const didMountRef = useRef(false);
 
+  // Read initial page and tag from URL on mount and fetch that page
   useEffect(() => {
+    const sp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const p = Math.max(1, parseInt(sp.get('page') || '1', 10));
+    const tagFromUrl = sp.get('tag') || '';
+
+    setCurrentPage(p);
+    setSelectedTag(tagFromUrl);
+    fetchBlogs(p, tagFromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync URL and fetch when page or tag changes after mount
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
+    // update URL
+    try {
+      const params = new URLSearchParams();
+      if (currentPage && currentPage > 1) params.set('page', String(currentPage));
+      if (selectedTag) params.set('tag', selectedTag);
+
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '/blog';
+      const url = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(url);
+    } catch (e) {
+      // ignore
+    }
+
     fetchBlogs(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, selectedTag]);
 
-  const fetchBlogs = async (page = 1) => {
+  const fetchBlogs = async (page = 1, tagParam = null) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set('page', String(page));
       params.set('limit', String(limit));
-      if (selectedTag) params.set('tag', selectedTag);
+      const tagToUse = tagParam !== null ? tagParam : selectedTag;
+      if (tagToUse) params.set('tag', tagToUse);
 
       const response = await fetch(`/api/blog?${params.toString()}`);
       const data = await response.json();
