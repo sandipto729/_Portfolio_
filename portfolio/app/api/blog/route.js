@@ -57,6 +57,7 @@ export async function GET(request) {
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
+    const fetchAll = searchParams.get('fetchAll') === 'true';
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
     const tag = searchParams.get('tag') || null;
@@ -67,9 +68,25 @@ export async function GET(request) {
     }
 
     const total = await Blog.countDocuments(filter);
+    
+    let blogs;
+    if (fetchAll) {
+      // Fetch all blogs without pagination
+      blogs = await Blog.find(filter)
+        .sort({ createdAt: -1 })
+        .lean();
+      
+      return NextResponse.json({
+        success: true,
+        data: blogs,
+        total,
+      });
+    }
+
+    // Fetch paginated results
     const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
 
-    const blogs = await Blog.find(filter)
+    blogs = await Blog.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch('/api/blog');
+      const response = await fetch('/api/blog?fetchAll=true');
       const data = await response.json();
       if (data.success) {
         setBlogs(data.data);
