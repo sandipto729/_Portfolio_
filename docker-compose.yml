@@ -43,6 +43,7 @@ services:
         AI_BACKEND_URL: http://ai_backend:8000
         NEXTAUTH_SECRET: your-secret-key-change-this-in-production
         NEXTAUTH_URL: http://43.204.214.45
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: 0x4AAAAAADHu-jf3fUSYI1za
     image: portfolio-frontend:latest
     container_name: portfolio-frontend
     restart: unless-stopped
