@@ -52,14 +52,36 @@ async function deleteBlogEmbedding(blogId) {
 }
 
 // GET: Fetch all blogs
-export async function GET() {
+export async function GET(request) {
   try {
     await dbConnect();
-    const blogs = await Blog.find({}).sort({ createdAt: -1 });
-    
+
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+    const tag = searchParams.get('tag') || null;
+
+    const filter = {};
+    if (tag) {
+      filter.tags = tag;
+    }
+
+    const total = await Blog.countDocuments(filter);
+    const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+    const blogs = await Blog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
     return NextResponse.json({
       success: true,
       data: blogs,
+      page,
+      limit,
+      total,
+      totalPages,
     });
   } catch (error) {
     return NextResponse.json(

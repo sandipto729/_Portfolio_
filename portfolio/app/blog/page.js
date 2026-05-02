@@ -9,20 +9,33 @@ const Blog = () => {
   const [popularBlogs, setPopularBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    fetchBlogs(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, selectedTag]);
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/blog');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+      if (selectedTag) params.set('tag', selectedTag);
+
+      const response = await fetch(`/api/blog?${params.toString()}`);
       const data = await response.json();
-      
+
       if (data.success) {
-        setBlogs(data.data);
-        // Set the first 3-5 blogs as popular/recommended
-        setPopularBlogs(data.data.slice(0, 5));
+        setBlogs(data.data || []);
+        setPopularBlogs((data.data || []).slice(0, 5));
+        setCurrentPage(data.page || page);
+        setTotalPages(data.totalPages || 1);
+        setTotal(data.total || 0);
       }
     } catch (error) {
       console.error('Error fetching blogs:', error);
@@ -30,10 +43,6 @@ const Blog = () => {
       setLoading(false);
     }
   };
-
-  const filteredBlogs = selectedTag
-    ? blogs.filter((blog) => Array.isArray(blog.tags) && blog.tags.includes(selectedTag))
-    : blogs;
 
   const allTags = Array.from(new Set(blogs.flatMap((blog) => blog.tags || []))).slice(0, 12);
 
@@ -58,7 +67,7 @@ const Blog = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Blog List - Left Side (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
-            {filteredBlogs.map((post) => (
+            {blogs.map((post) => (
                 <Link 
                   key={post.id}
                   href={`/blog/${post.id}`}
@@ -107,8 +116,34 @@ const Blog = () => {
                       </div>
                     </div>
                   </article>
-                </Link>
+                    </Link>
             ))}
+
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-zinc-400">
+                    Showing <span className="font-bold text-white">{blogs.length}</span> of <span className="font-bold text-white">{total}</span> articles
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      className={`px-3 py-2 rounded-lg text-sm font-bold ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : 'bg-zinc-900/50 hover:bg-zinc-900'}`}
+                    >
+                      Prev
+                    </button>
+                    <div className="text-sm text-zinc-400">Page <span className="text-white font-bold">{currentPage}</span> of <span className="text-white font-bold">{totalPages}</span></div>
+                    <button
+                      type="button"
+                      onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      className={`px-3 py-2 rounded-lg text-sm font-bold ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : 'bg-zinc-900/50 hover:bg-zinc-900'}`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
           </div>
 
           {/* Sidebar - Right Side (1/3 width) */}
