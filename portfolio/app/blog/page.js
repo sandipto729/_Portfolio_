@@ -10,22 +10,32 @@ const Blog = () => {
   const [popularBlogs, setPopularBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState('');
+  const [query, setQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const router = useRouter();
   const didMountRef = useRef(false);
+  const [totalGlobal, setTotalGlobal] = useState(0);
+  const [popularGlobal, setPopularGlobal] = useState([]);
+  const [allTagsGlobal, setAllTagsGlobal] = useState([]);
 
   // Read initial page and tag from URL on mount and fetch that page
   useEffect(() => {
     const sp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const p = Math.max(1, parseInt(sp.get('page') || '1', 10));
     const tagFromUrl = sp.get('tag') || '';
+    const qFromUrl = sp.get('q') || '';
 
     setCurrentPage(p);
     setSelectedTag(tagFromUrl);
+    setQuery(qFromUrl);
+    setSearchInput(qFromUrl);
     fetchBlogs(p, tagFromUrl);
+    // fetch global meta (latest 5 and total)
+    fetchGlobalMeta();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -41,6 +51,7 @@ const Blog = () => {
       const params = new URLSearchParams();
       if (currentPage && currentPage > 1) params.set('page', String(currentPage));
       if (selectedTag) params.set('tag', selectedTag);
+      if (query) params.set('q', query);
 
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '/blog';
       const url = params.toString() ? `${pathname}?${params.toString()}` : pathname;
@@ -53,6 +64,14 @@ const Blog = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, selectedTag]);
 
+  useEffect(() => {
+    // when query changes, reset to first page and fetch
+    if (!didMountRef.current) return;
+    setCurrentPage(1);
+    fetchBlogs(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
   const fetchBlogs = async (page = 1, tagParam = null) => {
     setLoading(true);
     try {
@@ -60,6 +79,7 @@ const Blog = () => {
       params.set('page', String(page));
       params.set('limit', String(limit));
       const tagToUse = tagParam !== null ? tagParam : selectedTag;
+      if (query) params.set('q', query);
       if (tagToUse) params.set('tag', tagToUse);
 
       const response = await fetch(`/api/blog?${params.toString()}`);
@@ -81,6 +101,23 @@ const Blog = () => {
 
   const allTags = Array.from(new Set(blogs.flatMap((blog) => blog.tags || []))).slice(0, 12);
 
+  const fetchGlobalMeta = async () => {
+    try {
+      // fetch latest 5 blogs (global)
+      const resp = await fetch('/api/blog?page=1&limit=5');
+      const d = await resp.json();
+      if (d.success) {
+        setPopularGlobal(d.data || []);
+        // derive tags from latest 5
+        const tags = Array.from(new Set((d.data || []).flatMap((b) => b.tags || []))).slice(0, 12);
+        setAllTagsGlobal(tags);
+        setTotalGlobal(d.total || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching global meta:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,6 +134,28 @@ const Blog = () => {
           <p className="text-zinc-400 text-lg">
             Engineering thoughts and interview deep-dives.
           </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setCurrentPage(1);
+              setQuery(searchInput);
+            }}
+            className="mt-6 flex items-center gap-3 max-w-md mx-auto"
+          >
+            <input
+              type="search"
+              value={typeof searchInput !== 'undefined' ? searchInput : ''}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search posts"
+              className="flex-1 px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+            >
+              Search
+            </button>
+          </form>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -191,7 +250,7 @@ const Blog = () => {
                   Popular Articles
                 </h3>
                 <div className="space-y-4">
-                  {popularBlogs.map((blog, index) => (
+                  {popularGlobal.map((blog, index) => (
                     <Link
                       key={blog.id}
                       href={`/blog/${blog.id}`}
@@ -224,14 +283,17 @@ const Blog = () => {
                   Popular Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {allTags.map((tag) => {
+                  {allTagsGlobal.map((tag) => {
                     const isActive = selectedTag === tag;
 
                     return (
                       <button
                         key={tag}
                         type="button"
-                        onClick={() => setSelectedTag(tag)}
+                        onClick={() => {
+                          setCurrentPage(1);
+                          setSelectedTag(tag);
+                        }}
                         className={`px-3 py-1 border text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                           isActive
                             ? 'bg-red-600/20 border-red-600/50 text-red-400'
@@ -246,7 +308,10 @@ const Blog = () => {
                 {selectedTag && (
                   <button
                     type="button"
-                    onClick={() => setSelectedTag('')}
+                    onClick={() => {
+                      setCurrentPage(1);
+                      setSelectedTag('');
+                    }}
                     className="mt-4 text-sm text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     Clear filter
@@ -258,7 +323,7 @@ const Blog = () => {
               <div className="glass border border-zinc-800/50 rounded-3xl p-6">
                 <div className="text-center">
                   <div className="text-4xl font-serif font-bold text-red-600 mb-2">
-                    {blogs.length}
+                    {totalGlobal}
                   </div>
                   <div className="text-sm text-zinc-400 uppercase tracking-widest">
                     Total Articles
