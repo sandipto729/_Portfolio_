@@ -61,10 +61,20 @@ export async function GET(request) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
     const tag = searchParams.get('tag') || null;
+    const q = searchParams.get('q') || null;
 
     const filter = {};
     if (tag) {
       filter.tags = tag;
+    }
+
+    if (q) {
+      // search in title, excerpt or content
+      filter.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { excerpt: { $regex: q, $options: 'i' } },
+        { content: { $regex: q, $options: 'i' } },
+      ];
     }
 
     const total = await Blog.countDocuments(filter);
